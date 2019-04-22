@@ -156,7 +156,7 @@ public class UserController {
     @RequestMapping("Logout")
     public String Logout(HttpSession session) {
         session.invalidate();
-
+        System.out.println();
         System.out.println("注销成功");
         return "login";
     }
