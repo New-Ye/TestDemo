@@ -82,6 +82,7 @@
     </select>
 
 
+
         <select id="slelectByBlurry" resultType="com.songtian.entity.User" parameterType="string">
             select * from user where name like concat('%',#{name},'%')
         </select>

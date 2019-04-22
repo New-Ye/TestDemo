@@ -164,7 +164,7 @@ public class UserController {
     @RequestMapping("selectFeaturesBySlaveAndUser")
     public String selectFeaturesBySlaveAndUser() {
         List<User> list = userService.selectFeaturesBySlaveAndUser("gay");
-
+        System.out.println();
         System.out.println(list);
         //System.out.println("0k");
         return null;
