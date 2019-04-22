@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.songtian.mapper.UserMapper">
+    <!-- SQL语句-->
+    <select id="selectByName" resultType="com.songtian.entity.User" parameterType="String">
+        select * from user where name=#{name}
+    </select>
+
+
+    <insert id="register" parameterType="com.songtian.entity.User">
+        insert into user (name ,pwd,sex,age,birthdate) values (#{name },#{pwd},#{sex},#{age},#{birthdate})
+    </insert>
+
+
+    <select id="selectAllUser" resultType="com.songtian.entity.User">
+        select * from user
+    </select>
+
+    <delete id="deleteByName" parameterType="com.songtian.entity.User">
+        delete from user where name =#{name}
+    </delete>
+
+    <update id="updateByName" parameterType="com.songtian.entity.User">
+        update user
+        <set>
+            <if test="pwd!=null and pwd!=''">
+                pwd=#{pwd},
+            </if>
+            <if test="sex!=null">
+                sex=#{sex},
+            </if>
+            <if test="age!=null">
+                age=#{age},
+            </if>
+            <if test="birthdate!=null and birthdate !=''">
+                birthdate=#{birthdate},
+            </if>
+        </set>
+        where
+        name =#{name}
+    </update>
+
+    <!--<resultMap id="selectFeaturesBySlaveAndUser" type="com.songtian.entity.User">-->
+    <!--<id property="name" column="name"/>-->
+    <!--<result property="pwd" column="pwd"/>-->
+
+    <!--<result property="slave" column="slavename"/>-->
+    <!--</resultMap>-->
+
+    <resultMap id="selectFeaturesBySlaveAndUser" type="com.songtian.entity.User">
+        <id property="name" column="name"></id>
+        <result property="pwd" column="pwd"></result>
+
+        <collection property="list" javaType="list" ofType="com.songtian.entity.Slave">
+            <id property="name" column="username"></id>
+            <result property="slavename" column="slavename"></result>
+
+        </collection>
+
+    </resultMap>
+
+<!--                            分步查询-未实现
+    <resultMap id="selectFeaturesBySlaveAndUser" type="com.songtian.entity.User">
+        <id property="name" column="name"></id>
+        <result property="pwd" column="pwd"></result>
+
+        <association property="username" column="com.songtian.entity.Slave">
+            <id property=""></id>
+
+
+
+        </association>
+    </resultMap>
+-->
+
+    <select id="selectFeaturesBySlaveAndUser" resultMap="selectFeaturesBySlaveAndUser">
+      SELECT DISTINCT u.`pwd`,f.slavename,features FROM features f,SLAVE s JOIN USER u ON s.`username`=u.`name`
+      WHERE f.`slavename`
+      IN (SELECT s.slavename FROM SLAVE WHERE username=#{name}) OR u.`name`=#{name}
+    </select>
+
+
+        <select id="slelectByBlurry" resultType="com.songtian.entity.User" parameterType="string">
+            select * from user where name like concat('%',#{name},'%')
+        </select>
+    <!--    <select id="slelectByBlurry" resultType="com.songtian.entity.User" parameterType="string">
+        <bind name="_name" value="'%'+name+'%'"></bind>
+            select * from user where name like #{_name}
+        </select>-->
+
+
+
+</mapper>
