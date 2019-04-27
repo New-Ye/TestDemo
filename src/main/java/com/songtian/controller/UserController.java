@@ -2,23 +2,21 @@ package com.songtian.controller;
 
 import com.songtian.entity.User;
 import com.songtian.service.UserService;
-import com.sun.deploy.net.URLEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.*;
-import java.net.FileNameMap;
-import java.security.PublicKey;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/")
@@ -155,13 +153,14 @@ public class UserController {
     //注销
     @RequestMapping("Logout")
     public String Logout(HttpSession session) {
+        //注销session
         session.invalidate();
         System.out.println();
         System.out.println("注销成功");
         return "login";
     }
 
-    //两表查询 改 三表联查（分步查询）
+    //两表查询 改 三表联查（分步查询）undo
     @RequestMapping("selectFeaturesBySlaveAndUser")
     public String selectFeaturesBySlaveAndUser() {
         List<User> list = userService.selectFeaturesBySlaveAndUser("gay");
@@ -173,37 +172,30 @@ public class UserController {
     }
 
     @RequestMapping("slelectByBlurry")
-    public String slelectByBlurry(){
-        List<User> list=userService.slelectByBlurry("三");
+    public String slelectByBlurry() {
+        List<User> list = userService.slelectByBlurry("三");
         //List<User> list=userService.slelectByBlurry("%三%");
         System.out.println(list);
 
         return null;
     }
 
-    //文件上传
+    //文件上传1
     //上传不了其他类型文件，如.apk
-    @RequestMapping("upFile")
-    public String upFile(@RequestParam("file") CommonsMultipartFile file,
+/*    @RequestMapping("upFile")
+    public String upFile(@RequestParam("file") MultipartFile file,
                          HttpServletRequest request, ModelMap modelMap) {
         // 获得原始文件名
         String fileName = file.getOriginalFilename();
-
-        //String fileName="demo.sql";
         System.out.println("原始文件名:" + fileName);
-
         //新文件名
         String newFileName = UUID.randomUUID() + fileName;
-
-
         // 获得项目的路径
         ServletContext servletContext = request.getSession().getServletContext();
-
         // 上传位置
         String path = servletContext.getRealPath("/file") + "/";// 设定文件保存的目录
 
         File f = new File(path);
-
         if (!f.exists()) {
             f.mkdirs();
         }
@@ -218,21 +210,54 @@ public class UserController {
                 }
                 fileOutputStream.close();
                 in.close();
-
             } catch (Exception e) {
 
                 e.printStackTrace();
             }
         }
-
         System.out.println("上传文件到:" + path + newFileName);
-
         // 保存文件地址，用于JSP页面回显
         //modelMap.addAttribute("fileUrl", path + newFileName);
-        modelMap.put("fileUrl", "文件已成功上传到" + path + newFileName);
+        if (path != null && path != "" && newFileName != null && newFileName != "") {
+            modelMap.put("fileUrl", "文件已成功上传到" + path + newFileName);
+        }
+        return "index";
+    }*/
+
+//文件上传2
+    @RequestMapping("upFile")
+    public String upFile(@RequestParam("file") MultipartFile multipartFile,HttpServletRequest request,HttpServletResponse response,ModelMap modelMap){
+        if (multipartFile!=null&&!multipartFile.isEmpty()){
+            //获取原文件名
+            String originalFilename=multipartFile.getOriginalFilename();
+            //获取原文件名，无后缀
+            String fileNamePrefix=originalFilename.substring(0,originalFilename.lastIndexOf("."));
+            //处理原文件名
+            String newFileNamePerfix = UUID.randomUUID() + fileNamePrefix;
+            //得到新文件名
+            String newFileName=newFileNamePerfix+originalFilename.substring(originalFilename.lastIndexOf("."));
+            // 获得项目的路径
+            ServletContext servletContext = request.getSession().getServletContext();
+            // 上传位置
+            String path = servletContext.getRealPath("/file") + "/";// 设定文件保存的目录
+            //构建文件对象
+            File file=new File(path+newFileName);
+            //上传
+            try {
+                multipartFile.transferTo(file);
+                modelMap.addAttribute("fileUrl", "文件已成功上传到" + file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
 
         return "index";
+
     }
+
+
+
 
     //列出所有的图片
 /*
@@ -254,46 +279,41 @@ public class UserController {
 */
 
 
-
     @RequestMapping("downFile")
-    public String downFile(HttpServletRequest request, HttpServletResponse response) {
-
-        //response.setCharacterEncoding("utf-8");
+    public String downFile(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException {
+        response.setCharacterEncoding("UTF-8");
         //文件名
         String fileName = request.getParameter("fileName");
+        //设置响应头，控制浏览器下载该文件
+       response.addHeader("Content-Disposition","attachment;filename="+new String(fileName.getBytes("UTF-8"),"ISO8859-1"));
+        //自动识别下载文件的类型
+        response.setContentType("multipart/form-data");
 
         try {
-            fileName = new String(fileName.getBytes("ISO-8859-1"), "UTF-8");
 
             //获取上传文件的位置
             ServletContext servletContext = request.getSession().getServletContext();
-            System.out.println("获取上传文件的位置"+servletContext);
+            System.out.println("获取上传文件的位置" + servletContext);
 
             //上传位置
             String fileSaveRootPath = servletContext.getRealPath("/file");
-            System.out.println("上传位置"+fileSaveRootPath);
+            System.out.println("上传位置" + fileSaveRootPath);
 
             //得到要下载文件的位置
             File file = new File(fileSaveRootPath + "\\" + fileName);
-            System.out.println("要下载文件的位置"+file);
 
+            System.out.println("要下载文件的位置" + file);
 
             //如果文件不存在
             if (!file.exists()) {
                 request.setAttribute("downFileMsg", "资源已被删除");
                 System.out.println("资源已被删除");
-                return null;
+                System.out.println(!file.exists());
+                return "index";
 
             }
 
 
-            //设置响应头，控制浏览器下载该文件
-//            response.addHeader("content-disposition", "attachment;filename="
-//                    + URLEncoder.encode(fileName, "UTF-8"));
-
-            response.setContentType("multipart/form-data");
-            //中文文件拿不到
-            response.addHeader("Content-Disposition", "attachment;filename=" + fileName);
             // 读取要下载的文件，保存到文件输入流
             FileInputStream in = new FileInputStream(fileSaveRootPath + "\\" + fileName);
             //创建输出流

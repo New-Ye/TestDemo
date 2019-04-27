@@ -17,8 +17,9 @@
 <h2>${name}</h2>
 <h2>${msg}</h2>
 <h2>${fileUrl}</h2>
+<h2>${downFileMsg}</h2>
 
-<a href="/downFile?fileName=c06343a7-e83b-41d9-b730-a3e3655644fc中文.txt.jpg">下载</a>
+<a href="/downFile?fileName=c06343a7-e83b-41d9-b730-a3e3655644fc中文.txt">下载</a>
 <form action="upFile"
       method="post" enctype="multipart/form-data">
     <input type="file" name="file" />
